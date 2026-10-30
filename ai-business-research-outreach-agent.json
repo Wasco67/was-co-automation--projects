@@ -1,0 +1,363 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate this business as a potential prospect for our AI automation service.\n\nBusiness name: {{ $json.business_name }}\n\nUse the business information available in the input to determine whether it is a realistic potential prospect.\n\nReturn the decision and short reason using the required structured output format.\nIMPORTANT:\nAlways preserve the original business name and client service in your response.\n\nThe output must contain:\n- business_name\n- client_service\n- decision\n- reason",
+        "options": {
+          "systemMessage": "IMPORTANT DECISION RULE:\n\nYou are evaluating POTENTIAL, not confirmed current processes.\n\nIf you only have a business name or very limited information, do NOT assume the business has no processes that could benefit from AI.\n\nAsk:\n\"Could this type of business reasonably benefit from AI automation?\"\n\nFor businesses such as:\n- clothing/fashion\n- retail/e-commerce\n- restaurants\n- agencies\n- real estate\n- healthcare\n- education\n- professional services\n\nthe answer should generally be YES because they may have opportunities such as customer inquiries, lead qualification, follow-ups, appointments, order handling, FAQs, internal workflows, or data processing.\n\nReturn NO only when the business category genuinely has little realistic opportunity for the service OR the provided information gives strong evidence that automation would not be useful.\n\nNEVER invent facts about the business.\nNEVER say a business has no automatable processes unless the input actually provides evidence for that conclusion.\n\nReturn ONLY:\n\n{\n  \"decision\": \"YES\" or \"NO\",\n  \"reason\": \"Short reason based only on the available information.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "74c0d713-22c5-4fd3-8bbe-8487a1f724d9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        176
+      ],
+      "id": "b892fe5c-10cf-456a-a3e0-ade22f22edc3",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "qrQ7VRDQEXqrAZiA",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"business_name\": \"nike\",\n  \"client_service\": \"AI automation\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -496,
+        0
+      ],
+      "id": "3b43da3f-3ff9-4367-a42d-3ef363cb3675",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "19c88b71-1476-4fc1-967b-8f27db40bb8f",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "YES",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        160
+      ],
+      "id": "1874ec23-b824-4b27-9456-d962b42a43c8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a short, natural cold email to the qualified business.\n\nBusiness name:\n{{ $json.output }}\n\nIMPORTANT:\n- Do NOT invent previous conversations, colleagues, clients, results, statistics, or partnerships.\n- Do NOT claim that our service has helped other businesses unless that information is explicitly provided.\n- Do NOT use placeholders such as [Your Name], [Your Company], or [Contact Information].\n- Do NOT write like a corporate marketing brochure.\n- Keep it conversational and human.\n- Focus on ONE realistic AI automation opportunity.\n- Make the email useful and specific rather than generic.\n- Keep it around 80–120 words.\n- End with a simple, low-pressure question.\nIMPORTANT OUTPUT FORMAT:\nReturn ONLY valid JSON. No markdown, no code block, no explanation.\n\n{\n  \"subject\": \"Short email subject\",\n  \"body\": \"Hi/Hello ...\\n\\nShort personalized body...\\n\\nBest,\\nSender name\"\n}",
+        "options": {
+          "systemMessage": "You are a professional cold-email writer.\n\nWrite a short, personalized cold email for a business that has been identified as a potential fit for the client's service.\n\nDo not exaggerate or make unsupported claims.\nKeep the email natural, specific, and concise."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        -48
+      ],
+      "id": "5a0ed47b-e8a0-4a94-b809-f5ba7f5aefea",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        304,
+        176
+      ],
+      "id": "66706096-76e3-402c-a60b-d3bb56540eb1",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "qrQ7VRDQEXqrAZiA",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        0
+      ],
+      "id": "6a9ff0f7-a259-42e4-a7db-8c48736fd769",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Nj5wRx0UuVGIWhFxMhASVCLyFWyJ-aHgbH7g8ZF4bsc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Nj5wRx0UuVGIWhFxMhASVCLyFWyJ-aHgbH7g8ZF4bsc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "bussiness_name",
+              "displayName": "bussiness_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "client_service",
+              "displayName": "client_service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        -48
+      ],
+      "id": "91bafb18-8df4-4635-88ce-eb4d230763b5",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SsjDPAaM6s7WK8pW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        112
+      ],
+      "id": "a4e6bcc1-4304-49f5-9f9e-8ab8138a4a0f",
+      "name": "Create a draft",
+      "webhookId": "d49a8625-7012-4d61-b076-b37cb7c1a502",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YR5lkgy6XfKevnUC",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "29a5fad7-f972-4b8a-8e8e-84ac91ded0f5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fe8f1903fdacafa47c4620adbf81cefd6fd1b6915daecbad95dac1c8ca98eb08"
+  },
+  "nodeGroups": [],
+  "id": "vTPKrm1RU7AyokwX",
+  "tags": []
+}
