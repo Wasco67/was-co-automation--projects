@@ -1,0 +1,1 @@
+# was-co-automation--projects
