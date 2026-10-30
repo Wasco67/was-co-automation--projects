@@ -1,0 +1,350 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        -16
+      ],
+      "id": "a2952338-0e3e-443f-b865-8cdeec5d585d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"location\": \"Lahore, Pakistan\",\n  \"service\": \"AI lead qualification automation\",\n  \"target_business\": \"Businesses that receive customer leads/inquiries\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -928,
+        -16
+      ],
+      "id": "44f2a715-f870-47a3-8ef9-400f0c5c23b9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "categories",
+              "value": "=commercial"
+            },
+            {
+              "name": "filter",
+              "value": "circle:74.3587,31.5204,10000"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            },
+            {
+              "name": "apikey",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -720,
+        -16
+      ],
+      "id": "814244a4-bb0b-4fcc-b252-d2806472f52c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"businesses\": [\n    {\n      \"name\": \"Example Dental Clinic\",\n      \"website\": \"https://example.com\",\n      \"location\": \"Lahore, Pakistan\",\n      \"category\": \"Dental Clinic\"\n    },\n    {\n      \"name\": \"Example Real Estate\",\n      \"website\": \"https://example.org\",\n      \"location\": \"Lahore, Pakistan\",\n      \"category\": \"Real Estate\"\n    },\n    {\n      \"name\": \"Example Restaurant\",\n      \"website\": \"https://example.net\",\n      \"location\": \"Lahore, Pakistan\",\n      \"category\": \"Restaurant\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -496,
+        -16
+      ],
+      "id": "388de793-292a-4171-b1ee-a348275329e4",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "businesses",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -16
+      ],
+      "id": "76b7d2a2-ea7e-4408-8119-b170a9076d67",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this business:\n\nName: {{ $json.name }}\nCategory: {{ $json.category }}\nLocation: {{ $json.location }}\nWebsite: {{ $json.website }}",
+        "options": {
+          "systemMessage": "You are a business prospecting analyst.\n\nAnalyze the business information provided to you.\n\nOur service:\nAI lead qualification automation.\n\nYour job:\n1. Determine whether this business could reasonably benefit from automated lead qualification.\n2. Give a score from 0 to 100.\n3. Explain the opportunity briefly.\n4. Recommend whether we should contact the business.\n\nReturn ONLY valid JSON in this format:\n\n{\n  \"qualified\": true,\n  \"score\": 0,\n  \"opportunity\": \"short explanation\",\n  \"reason\": \"short explanation\"\n}\n\nRules:\n- Do not invent facts about the business.\n- If there is not enough information, say so.\n- Do not claim the business definitely has a problem unless the provided information supports it."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        -32
+      ],
+      "id": "76498ff4-3c1c-4546-9623-ae303fc2cb8e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "a879930f-f279-443b-a5c7-79bd2140ff92",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "qrQ7VRDQEXqrAZiA",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bd53174f-ef72-4e8c-a290-d6d8ce34d463",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "\"qualified\": true",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "8ea5155b-7717-4989-a85c-a22a5bbf1ddc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a personalized outreach email for this business.\n\nBusiness name: {{ $json.name }}\nCategory: {{ $json.category }}\nLocation: {{ $json.location }}\nWebsite: {{ $json.website }}\n\nAI analysis:\n{{ $json.output }}",
+        "options": {
+          "systemMessage": "You write concise, personalized B2B outreach emails.\n\nOur service:\nAI lead qualification automation.\n\nUse the business information and previous analysis provided.\n\nWrite a short, professional email explaining how our service could potentially help this business.\n\nDo not invent facts.\nDo not claim you discovered a problem unless the provided information supports it.\nDo not use generic mass-marketing language.\nDo not make exaggerated promises.\n\nReturn:\nSubject: ...\nBody: ..."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        -192
+      ],
+      "id": "81e8dd67-822a-4315-9c22-d231234d8284",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        688,
+        256
+      ],
+      "id": "a7f3e5d5-686f-44a6-8507-1fe28b88b60b",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "qrQ7VRDQEXqrAZiA",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        112
+      ],
+      "id": "6fe9128b-8c8a-40fe-b007-aa2b8b68daf5",
+      "name": "Create a draft",
+      "webhookId": "8a59c03b-3785-4b73-8b48-9990433fd994",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YR5lkgy6XfKevnUC",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c7329098-e398-4a95-88a9-bb1ea53170c3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fe8f1903fdacafa47c4620adbf81cefd6fd1b6915daecbad95dac1c8ca98eb08"
+  },
+  "nodeGroups": [],
+  "id": "tzvSw87nLlC7LThZ",
+  "tags": []
+}
