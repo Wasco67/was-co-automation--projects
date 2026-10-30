@@ -1,0 +1,283 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.message}}\n",
+        "options": {
+          "systemMessage": "You are a customer support triage agent.\n\nRead the customer's message and decide its priority.\n\nLOW:\nSimple questions or requests that are safe to answer automatically.\n\nMEDIUM:\nNeeds human attention but is not urgent.\n\nHIGH:\nRefunds, payment disputes, security/account problems, serious complaints, angry customers, or anything that could cause financial or reputational damage.\n\nIf you are unsure, choose HIGH.\n\nReturn ONLY this JSON:\n\n{\n  \"priority\": \"LOW\",\n  \"reason\": \"short reason\",\n  \"reply\": \"short helpful response\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "35e6284e-e3d3-477c-9558-dbaa77358a0c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        224
+      ],
+      "id": "b4cbbfe6-24c0-471f-8838-715d3db6d086",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "qrQ7VRDQEXqrAZiA",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.priority}}",
+                    "rightValue": "low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "682eb4f6-b496-484e-8d72-6f83f778564b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cbac55ac-f8ae-42dc-88ba-05bf7a9cde3c",
+                    "leftValue": "={{$json.priority}}",
+                    "rightValue": "Medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4f1a117b-97c4-4474-96ab-b4087dbe2cff",
+                    "leftValue": "={{$json.priority}}",
+                    "rightValue": "High",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -16
+      ],
+      "id": "e29effb1-1820-4c71-8474-46e7b7a96110",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        256
+      ],
+      "id": "cf24e1ad-27c6-4b16-a76d-2cde0082b057",
+      "name": "Send a text message",
+      "webhookId": "148f5bc2-2a76-41a5-a683-294669e8e27e"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Nj5wRx0UuVGIWhFxMhASVCLyFWyJ-aHgbH7g8ZF4bsc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Nj5wRx0UuVGIWhFxMhASVCLyFWyJ-aHgbH7g8ZF4bsc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        48
+      ],
+      "id": "464eb746-6b43-4fb7-a161-f449734930e3",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SsjDPAaM6s7WK8pW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "ae6ad1fd-ae89-425a-b0df-41038bff1696",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -16
+      ],
+      "id": "b4b80156-df6e-4d1c-a8c0-77c2d69102a8",
+      "name": "Webhook",
+      "webhookId": "ae6ad1fd-ae89-425a-b0df-41038bff1696"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        384,
+        -112
+      ],
+      "id": "2d8f5d77-8b52-4e6c-b373-cf3c577ecd0f",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2a1f8512-c6a0-4a41-a192-bb795f7ed5d4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fe8f1903fdacafa47c4620adbf81cefd6fd1b6915daecbad95dac1c8ca98eb08"
+  },
+  "nodeGroups": [],
+  "id": "b8iIVSOnECZtB8Wl",
+  "tags": []
+}
